@@ -1,5 +1,5 @@
 import warnings
-
+import pickle
 import numpy as np
 
 try:
@@ -915,6 +915,22 @@ class LSAPosterior:
         self.samples = samples
         return samples
 
+    def plot_corner(self, filename='./corner.png', draw_samples=False, corner_kwargs=None, savefig_kwargs=None):
+        try:
+            import corner
+        except ImportError:
+            raise ImportError("Corner library is not installed - exiting.")
+        if draw_samples is not False:
+            self.draw_likelihood_samples(size=draw_samples)
+        elif not hasattr(self, samples):
+            self.draw_likelihood_samples(size=10000)
+        fig = corner.corner(self.samples, **corner_kwargs)
+        fig.savefig(filename, **savefig_kwargs)
+        return fig
+    
+    def save(self, path='./fisher.pickle'):
+        pickle.dump(self, open(path, "wb"))
 
 
-
+def load_lsa_posterior(path):
+    return pickle.load(open(path,"rb"))
