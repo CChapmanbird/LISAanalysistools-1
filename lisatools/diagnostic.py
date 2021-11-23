@@ -853,3 +853,68 @@ def scale_snr(target_snr, sig, *snr_args, return_orig_snr=False, **snr_kwargs):
         return (out, snr_out)
 
     return out
+
+
+class LSAPosterior:
+    """
+    Gravitational-wave posterior under the linear signal approximation.
+    """
+    def __init__(self, waveform_model, parameters, eps, parameters_of_interest=None, waveform_kwargs=None,
+                 inner_product_kwargs=None, eps_scalings=None, parameter_transforms=None, use_gpu=True):
+        self.model = waveform_model
+        self.parameters = parameters
+        self.eps = eps
+        self.waveform_kwargs = waveform_kwargs
+        self.eps_scalings = eps_scalings
+        self.parameter_transforms = parameter_transforms
+        self.parameters_of_interest = parameters_of_interest
+        self.inner_product_kwargs=inner_product_kwargs
+        self.use_gpu = use_gpu
+
+        self._apply_eps_scalings()
+        self._get_parameter_inds()
+
+    def _apply_eps_scalings(self):
+        for key in self.eps.keys():
+            if key in self.eps_scalings:
+                self.eps[key] *= self.parameters[key]
+
+    def _get_parameter_inds(self):
+        self.deriv_inds = []
+        self.full_param_vals = []
+        self.reduced_param_vals = []
+        for i, key in enumerate(self.parameters.keys()):
+            self.full_param_vals.append(self.parameters[key])
+            if key in self.parameters_of_interest:
+                self.deriv_inds.append(i)
+                self.reduced_param_vals.append(self.parameters[key])
+
+    def get_fim(self, accuracy=True):
+        fish, derivs = fisher(
+            waveform_model=self.model,
+            params=self.full_param_vals,
+            eps=self.eps,
+            deriv_inds=self.deriv_inds,
+            parameter_transforms=self.parameter_transforms,
+            waveform_kwargs=self.waveform_kwargs,
+            inner_product_kwargs=self.inner_product_kwargs,
+            accuracy=accuracy,
+            use_gpu=self.use_gpu,
+            return_derivs=True,
+        )
+        self.fim = fish
+        self.derivatives = derivs
+
+    def get_covariance_matrix(self, accuracy=True):
+        self.covariance_matrix = covariance(fish=self.fim,precision=accuracy)
+
+    def draw_likelihood_samples(self, size, covariance_kwargs=None):
+        if not hasattr(self,covariance_matrix):
+            self.get_covariance_matrix(**covariance_kwargs)
+        samples = np.random.multivariate_normal(self.reduced_param_vals, self.covariance_matrix, size=size)
+        self.samples = samples
+        return samples
+
+
+
+
