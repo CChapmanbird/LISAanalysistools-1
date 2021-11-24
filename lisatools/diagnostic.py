@@ -869,13 +869,14 @@ class LSAPosterior:
         self.inner_product_kwargs=inner_product_kwargs
         self.use_gpu = use_gpu
 
-        self._apply_eps_scalings()
-        self._get_parameter_inds()
-
         if parameters_of_interest is None:
             self.parameters_of_interest = list(eps.keys())
+            print('PARAMETERS OF INTEREST',self.parameters_of_interest)
         else:
             self.parameters_of_interest = parameters_of_interest
+        
+        self._apply_eps_scalings()
+        self._get_parameter_inds()
 
     def _apply_eps_scalings(self):
         for key in self.eps.keys():
@@ -898,7 +899,6 @@ class LSAPosterior:
             params=self.full_param_vals,
             eps=self.eps,
             deriv_inds=self.deriv_inds,
-            parameter_transforms=self.parameter_transforms,
             waveform_kwargs=self.waveform_kwargs,
             inner_product_kwargs=self.inner_product_kwargs,
             accuracy=accuracy,
