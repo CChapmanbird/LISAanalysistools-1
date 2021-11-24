@@ -866,13 +866,18 @@ class LSAPosterior:
         self.eps = eps
         self.waveform_kwargs = waveform_kwargs
         self.eps_scalings = eps_scalings
-        self.parameter_transforms = parameter_transforms
         self.parameters_of_interest = parameters_of_interest
         self.inner_product_kwargs=inner_product_kwargs
         self.use_gpu = use_gpu
 
         self._apply_eps_scalings()
         self._get_parameter_inds()
+        
+        if parameter_transforms is None:
+        	self.parameter_transforms = list(eps.keys())
+        else:
+	        self.parameter_transforms = parameter_transforms
+        
 
     def _apply_eps_scalings(self):
         for key in self.eps.keys():
@@ -927,7 +932,7 @@ class LSAPosterior:
         fig = corner.corner(self.samples, **corner_kwargs)
         fig.savefig(filename, **savefig_kwargs)
         return fig
-    
+
     def save(self, path='./fisher.pickle'):
         pickle.dump(self, open(path, "wb"))
 
