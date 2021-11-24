@@ -871,7 +871,12 @@ class LSAPosterior:
 
         self._apply_eps_scalings()
         self._get_parameter_inds()
-        
+
+        if parameters_of_interest is None:
+            self.parameters_of_interest = list(eps.keys())
+        else:
+            self.parameters_of_interest = parameters_of_interest
+
     def _apply_eps_scalings(self):
         for key in self.eps.keys():
             if key in self.eps_scalings:
