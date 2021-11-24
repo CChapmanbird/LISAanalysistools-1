@@ -860,24 +860,22 @@ class LSAPosterior:
     Gravitational-wave posterior under the linear signal approximation.
     """
     def __init__(self, waveform_model, parameters, eps, parameters_of_interest=None, waveform_kwargs=None,
-                 inner_product_kwargs=None, eps_scalings=None, parameter_transforms=None, use_gpu=True):
+                 inner_product_kwargs=None, eps_scalings=None, use_gpu=True):
         self.model = waveform_model
         self.parameters = parameters
         self.eps = eps
         self.waveform_kwargs = waveform_kwargs
         self.eps_scalings = eps_scalings
-        self.parameters_of_interest = parameters_of_interest
         self.inner_product_kwargs=inner_product_kwargs
         self.use_gpu = use_gpu
 
         self._apply_eps_scalings()
         self._get_parameter_inds()
-        
-        if parameter_transforms is None:
-        	self.parameter_transforms = list(eps.keys())
-        else:
-	        self.parameter_transforms = parameter_transforms
-        
+	        
+	if self.parameters_of_interest is None:
+		self.parameters_of_interest = list(eps.keys())
+	else:
+		self.parameters_of_interest = parameters_of_interest
 
     def _apply_eps_scalings(self):
         for key in self.eps.keys():
