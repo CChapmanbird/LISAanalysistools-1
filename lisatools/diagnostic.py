@@ -375,7 +375,6 @@ def fisher(
             fish[i][j] = inner_product(
                 [dh[i].real, dh[i].imag],
                 [dh[j].real, dh[j].imag],
-                use_gpu=use_gpu,
                 **inner_product_kwargs
             )
             fish[j][i] = fish[i][j]
@@ -871,7 +870,6 @@ class LSAPosterior:
 
         if parameters_of_interest is None:
             self.parameters_of_interest = list(eps.keys())
-            print('PARAMETERS OF INTEREST',self.parameters_of_interest)
         else:
             self.parameters_of_interest = parameters_of_interest
         
@@ -887,17 +885,18 @@ class LSAPosterior:
         self.deriv_inds = []
         self.full_param_vals = []
         self.reduced_param_vals = []
+        self.eps_interest_vals = []
         for i, key in enumerate(self.parameters.keys()):
             self.full_param_vals.append(self.parameters[key])
             if key in self.parameters_of_interest:
                 self.deriv_inds.append(i)
                 self.reduced_param_vals.append(self.parameters[key])
-
+                self.eps_interest_vals.append(self.eps[key])
     def get_fim(self, accuracy=True):
         fish, derivs = fisher(
             waveform_model=self.model,
             params=self.full_param_vals,
-            eps=self.eps,
+            eps=self.eps_interest_vals,
             deriv_inds=self.deriv_inds,
             waveform_kwargs=self.waveform_kwargs,
             inner_product_kwargs=self.inner_product_kwargs,
