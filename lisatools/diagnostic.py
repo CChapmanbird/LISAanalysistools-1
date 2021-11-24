@@ -260,11 +260,13 @@ def dh_dlambda(
         # print([len(h_I_up_2eps), len(h_I_up_eps), len(h_I_down_2eps), len(h_I_down_eps)])
 
         # error scales as eps^4
+        
         dh_I = (
             -h_I_up_2eps[:ind_max]
             + h_I_down_2eps[:ind_max]
             + 8 * (h_I_up_eps[:ind_max] - h_I_down_eps[:ind_max])
         ) / (12 * eps)
+        
         # Time thta it takes for one variable: approx 5 minutes
     else:
         # Derivative of the Waveform
@@ -366,7 +368,7 @@ def fisher(
 
         # A = window_zero(A,dt)
         # B = window_zero(B,dt)
-
+    
     dh = xp.asarray(dh)
 
     fish = np.zeros((num_fish_params, num_fish_params))
@@ -892,7 +894,8 @@ class LSAPosterior:
                 self.deriv_inds.append(i)
                 self.reduced_param_vals.append(self.parameters[key])
                 self.eps_interest_vals.append(self.eps[key])
-    def get_fim(self, accuracy=True):
+
+    def get_fim(self, accuracy=True, keep_derivatives=False):
         fish, derivs = fisher(
             waveform_model=self.model,
             params=self.full_param_vals,
@@ -905,13 +908,14 @@ class LSAPosterior:
             return_derivs=True,
         )
         self.fim = fish
-        self.derivatives = derivs
+        if keep_derivatives:
+            self.derivatives = derivs
 
     def get_covariance_matrix(self, accuracy=True):
         self.covariance_matrix = covariance(fish=self.fim,precision=accuracy)
 
     def draw_likelihood_samples(self, size, covariance_kwargs=None):
-        if not hasattr(self,covariance_matrix):
+        if not hasattr(self,'covariance_matrix'):
             self.get_covariance_matrix(**covariance_kwargs)
         samples = np.random.multivariate_normal(self.reduced_param_vals, self.covariance_matrix, size=size)
         self.samples = samples
